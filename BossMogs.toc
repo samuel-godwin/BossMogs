@@ -1,0 +1,8 @@
+## Interface: 110005
+## Title: BossMogs
+## Notes: An addon for tracking where appearences can be obtained
+## Author: Pecci
+
+
+BossMogs.lua
+GUI.lua
