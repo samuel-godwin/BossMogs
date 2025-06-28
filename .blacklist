@@ -1,5 +1,6 @@
 # This file just holds the blacklist so our actual builds only contain stuff needed by wow
 
+.git
 .github
 .gitignore
 LICENSE

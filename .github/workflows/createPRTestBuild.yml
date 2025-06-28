@@ -34,19 +34,20 @@ jobs:
           mapfile -t blacklist < .blacklist
 
           for file in **/*; do
+            echo "$file"
             skip=false
             for blockedFile in "${blacklist[@]}"; do
-              if [[ "$item" == "$blockedFile" ]]; then
+              if [[ "$file" == "$blockedFile" ]]; then
                 skip=true
-                echo "Skipping file as it is blacklisted: $item"
+                echo "Skipping file as it is blacklisted: $file"
                 break
               fi
             done
 
             if [ "$skip" = false ]; then
-              dest_path="$dest_dir/$src_file"
+              dest_path="$dest_dir/$file"
               mkdir -p "$(dirname "$dest_path")"
-              cp "$src_file" "$dest_path"
+              cp "$file" "$dest_path"
             fi
           done
       - name: Upload artifact on PR
@@ -54,10 +55,10 @@ jobs:
         if: github.event.pull_request.base.ref == 'main'
         with:
           name: BossMogs
-          path: addonArtifact/
-      - name: Upload to GitHub Release
-        uses: softprops/action-gh-release@v2
-        if: github.event.pull_request.base.ref == 'main'
-        with:
-          name: BossMogs
-          path: addonArtifact/
+          path: bossMogsAddon/
+      # - name: Upload to GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   if: github.event.pull_request.base.ref == 'main'
+      #   with:
+      #     name: BossMogs
+      #     path: bossMogsAddon/
