@@ -1,7 +1,9 @@
 name: Create PR/Release build
 on:
   pull_request_target:
-    types: [opened, synchronize]
+    types:
+      - synchronize
+      - opened
   branches: "main"
   push:
     tags:
