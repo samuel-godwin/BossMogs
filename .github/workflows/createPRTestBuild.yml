@@ -23,12 +23,11 @@ jobs:
         uses: actions/checkout@v4
       # This next bit is to create a dir that has all the development related stuff stripped
       # Basically we want our releases to only contain stuff that wow needs
-      - name: Create Artifact dir
-        run: mkdir bossMogsAddon
       - name: Read blacklist and copy files
         shell: bash
         run: |
-          dest_dir="addonArtifact"
+          mkdir bossMogsAddon
+          dest_dir="bossMogsAddon"
 
           shopt -s globstar dotglob nullglob
 
