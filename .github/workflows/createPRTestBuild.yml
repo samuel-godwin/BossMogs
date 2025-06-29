@@ -1,0 +1,83 @@
+name: Create PR/Release build
+permissions:
+  pull-requests: write
+
+on:
+  pull_request:
+    types:
+      - synchronize
+      - opened
+    branches: main
+  push:
+    tags:
+      - "*"
+
+jobs:
+  build_addon_artifact:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout PR head # If its a PR we wanna build from the head of the PR branch
+        if: github.event.pull_request.base.ref == 'main'
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+      - name: Checkout main # If its a release tag we wanna build from the main branch
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: actions/checkout@v4
+      # This next bit is to create a dir that has all the development related stuff stripped
+      # Basically we want our releases to only contain stuff that wow needs
+      - name: Read blacklist and copy files
+        shell: bash
+        run: |
+          mkdir -p bossMogsAddon
+          dest_dir="bossMogsAddon"
+
+          shopt -s globstar dotglob nullglob
+
+          mapfile -t blacklist < .blacklist
+          is_blacklisted() {
+            local path="$1"
+            for blockedFile in "${blacklist[@]}"; do
+              if [[ "$file" == "$blockedFile" ]]; then
+                return 0
+              fi
+            done
+            return 1
+          }
+
+          recursive_loop() {
+            local dir="$1"
+
+            for file in "$dir"/*; do
+              if is_blacklisted "$file"; then
+                continue
+              elif [[ -f $file ]]; then
+                dest_path="$dest_dir/$file"
+                mkdir -p "$(dirname "$dest_path")"
+                cp "$file" "$dest_path"
+                continue
+              elif [[ -d $file ]]; then
+                recursive_loop "$file"
+              fi
+            done
+          }
+          recursive_loop .
+
+      - name: Upload artifact on PR
+        uses: actions/upload-artifact@v4
+        if: github.event.pull_request.base.ref == 'main'
+        with:
+          name: BossMogs
+          path: bossMogsAddon/
+      - uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ✅ Artifact created! [Download it here](https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Upload to GitHub Release
+      #   uses: softprops/action-gh-release@v2
+      #   if: github.event.pull_request.base.ref == 'main'
+      #   with:
+      #     name: BossMogs
+      #     path: bossMogsAddon/
